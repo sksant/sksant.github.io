@@ -2,18 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sksant.github.io/posts/welcome/index.html</loc>
-    <lastmod>2024-05-02T22:51:53.352Z</lastmod>
+    <lastmod>2024-06-04T06:18:32.225Z</lastmod>
+  </url>
+  <url>
+    <loc>https://sksant.github.io/about.html</loc>
+    <lastmod>2024-06-04T06:22:26.606Z</lastmod>
   </url>
   <url>
     <loc>https://sksant.github.io/index.html</loc>
     <lastmod>2024-05-02T22:51:53.352Z</lastmod>
   </url>
   <url>
-    <loc>https://sksant.github.io/about.html</loc>
-    <lastmod>2024-05-02T22:51:53.352Z</lastmod>
-  </url>
-  <url>
-    <loc>https://sksant.github.io/posts/post-with-code/index.html</loc>
-    <lastmod>2024-05-02T22:51:53.352Z</lastmod>
+    <loc>https://sksant.github.io/posts/enefit-part-1/writeup-p1-v3.html</loc>
+    <lastmod>2024-06-04T06:07:49.100Z</lastmod>
   </url>
 </urlset>
