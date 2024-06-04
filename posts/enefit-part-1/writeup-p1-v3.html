@@ -207,8 +207,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <p><img src="image.jpg" class="img-fluid"></p>
 <p>I completed part 1 of <a href="https://www.fast.ai/about.html#jeremy-howard">Jeremy Howard</a>’s course <a href="https://course.fast.ai/">Practical Deep Learning for Coders</a>. To practice what I learned about modeling tabular data, I competed in a recent time series <a href="https://www.kaggle.com/competitions/predict-energy-behavior-of-prosumers">forecasting competition</a> on Kaggle.</p>
-<p><a href="https://www.enefit.ee/en">Enefit</a>, one of the largest energy companies in the Baltic region, challenged competitors to create an energy prediction model of Estonian clients that have installed solar panels. Because these “prosumers” both produce and consume energy, they disproportionately create energy imbalance, where expected consumption doesn’t match actual consumption. For Enefit, the result is inefficiency, higher operational costs, and grid instability. Since prosumers are a rapidly increasing share of clients, reliable energy predictions are critical.</p>
-<p>Specifically, we are to predict the amount produced or consumed by a prosumer given recent records of actual targets, installed capacity, weather data, and relevant energy prices. A standard modeling process would entail an in-depth exploratory analysis followed by building a model. Instead, Jeremy recommends to:</p>
+<p><a href="https://www.enefit.ee/en/enefit">Enefit</a>, one of the largest energy companies in the Baltic region, challenged competitors to create an energy prediction model of Estonian clients that have installed solar panels. Because these “prosumers” both produce and consume energy, they disproportionately create energy imbalance, where expected consumption doesn’t match actual consumption. For Enefit, the result is inefficiency, higher operational costs, and grid instability. Since prosumers are a rapidly increasing share of energy clients, reliable energy predictions are critical.</p>
+<p>Specifically, our prediction target is the amount produced or consumed by a prosumer given recent records of actual targets, installed capacity, weather data, and relevant energy prices. A standard modeling process would entail an in-depth exploratory analysis followed by building a model. Instead, Jeremy recommends to:</p>
 <ol type="1">
 <li><p>build a model early on that is easy to train and interpret, like a decision tree;</p></li>
 <li><p>use the model to better understand the data, i.e.&nbsp;identify data issues, find out what’s hard, what features are the strongest predictors, how they vary with the target, etc;</p></li>
@@ -249,7 +249,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The released data covers September 1, 2021 to May 29, 2023. During the evaluation period, the models are re-scored 3 times as new data is collected: over February 2024, March 2024, and finally April 2024.</p>
 <p>An effective validation set should resemble the test data, which is what the model is ultimately scored on. Since our goal is to forecast, the test data will be more recent than the released data. It’s also given that new prosumers can appear or disappear each successive scoring period. Therefore, not only must the validation data be more recent than the training data, it must also include prosumers that are not in the training data.</p>
-<p>I performed 3-fold cross validation using progressively larger training sets and 1 month validation sets that aligned with the scoring periods: February 2023, March 2023, and April 2023. Each round, I dropped a random set of prosumers from the validation set. In subsequent rounds, I included the validation month from the previous round in the training set. I then averaged the errors over the three rounds to get a cross validation score. I held out May 2023 as my test set. This is summarized below:</p>
+<p>For my final solution, I performed 3-fold cross validation using progressively larger training sets and 1 month validation sets that aligned with the scoring periods: February 2023, March 2023, and April 2023. Each round, I dropped a random set of prosumers from the training set among those common to training and validation just after the split, which made the validation ones new from the model’s point of view. In subsequent rounds, I included the validation month from the previous round in the training set. I then averaged the errors over the three rounds to get a cross validation score. I held out May 2023 as my test set. This is summarized below:</p>
 <table class="table">
 <thead>
 <tr class="header">
@@ -281,7 +281,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Let’s look at the data available at forecast time.</p>
+<p>I used Round 1’s scheme during my development process. Let’s look at the data available at forecast time next.</p>
 </section>
 <section id="understanding-forecasts" class="level2" data-number="2">
 <h2 data-number="2" class="anchored" data-anchor-id="understanding-forecasts"><span class="header-section-number">2</span> Understanding forecasts</h2>
@@ -492,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <ul>
-<li><code>client</code>: yesterday’s records of installed capacity (<strong>2023-05-29</strong>) by segment. These dates lag 2 days behind the forecast horizon.</li>
+<li><code>client</code>: yesterday’s records of installed capacity (<strong>2023-05-29</strong>). These dates lag 2 days behind the forecast horizon.</li>
 </ul>
 <div id="3812c15d-04b6-4990-bb0e-99dc4918420d" class="cell" data-execution_count="8">
 <details open="" class="code-fold">
@@ -1012,7 +1012,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>I did the following groupbys on the dates and on the counties:</p>
 <ol type="1">
 <li><p><strong>date</strong>: mean and standard deviation over <em>all</em> counties (and hence all weather stations in each county) at each unique datetime</p></li>
-<li><p><strong>local</strong>: mean and standard deviation over all weather stations in an <em>individual county</em> at each unique datetime, i.e.&nbsp;mean/std of county <em>n</em> on datetime <em>d</em>.</p></li>
+<li><p><strong>local</strong>: mean and standard deviation over all weather stations in an <em>individual county</em> at each unique datetime, i.e.&nbsp;mean/std of county <em>n</em> at datetime <em>d</em>.</p></li>
 </ol>
 <p>Now that we know how we’ll merge the tables, let’s look at the training set and clean the data.</p>
 </section>
@@ -1682,7 +1682,7 @@ Note
 </div>
 </div>
 <p>Excluding the target, 135 columns is a lot to study at once. As we go on, we’ll narrow our focus to the most influential ones.</p>
-<p>Next we’ll split the data to use Sept 2021 - Jan 2023 for training and Feb 23 for validation. From the training set, we’ll drop a random set of prosumers (i.e.&nbsp;<code>prediction_unit_id</code>’s or PIDs). In my implementation, I dropped prosumers among those that were common to both training and validation after the split, which effectively made the validation ones new from the model’s point of view.</p>
+<p>Next we’ll split the data to use Sept 2021 - Jan 2023 for training and Feb 23 for validation. From the training set, we’ll drop a random set–and a random amount–of prosumers among those that are common to both training and validation just after splitting, making the validation ones new from the model’s point of view. We’ll indicate how many and which ones we drop with their <code>prediction_unit_id</code>’s (PIDs).</p>
 <p>fastai’s <code>TabularPandas</code> class will handle splitting the data as well as encoding continuous and categorical variables.</p>
 <div id="1288a840-e122-4621-a394-b47356eb38f6" class="cell" data-execution_count="38">
 <details class="code-fold">
@@ -1849,7 +1849,7 @@ Wall time: 29 s</code></pre>
 <style>#sk-container-id-1 {color: black;background-color: white;}#sk-container-id-1 pre{padding: 0;}#sk-container-id-1 div.sk-toggleable {background-color: white;}#sk-container-id-1 label.sk-toggleable__label {cursor: pointer;display: block;width: 100%;margin-bottom: 0;padding: 0.3em;box-sizing: border-box;text-align: center;}#sk-container-id-1 label.sk-toggleable__label-arrow:before {content: "▸";float: left;margin-right: 0.25em;color: #696969;}#sk-container-id-1 label.sk-toggleable__label-arrow:hover:before {color: black;}#sk-container-id-1 div.sk-estimator:hover label.sk-toggleable__label-arrow:before {color: black;}#sk-container-id-1 div.sk-toggleable__content {max-height: 0;max-width: 0;overflow: hidden;text-align: left;background-color: #f0f8ff;}#sk-container-id-1 div.sk-toggleable__content pre {margin: 0.2em;color: black;border-radius: 0.25em;background-color: #f0f8ff;}#sk-container-id-1 input.sk-toggleable__control:checked~div.sk-toggleable__content {max-height: 200px;max-width: 100%;overflow: auto;}#sk-container-id-1 input.sk-toggleable__control:checked~label.sk-toggleable__label-arrow:before {content: "▾";}#sk-container-id-1 div.sk-estimator input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-label input.sk-toggleable__control:checked~label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 input.sk-hidden--visually {border: 0;clip: rect(1px 1px 1px 1px);clip: rect(1px, 1px, 1px, 1px);height: 1px;margin: -1px;overflow: hidden;padding: 0;position: absolute;width: 1px;}#sk-container-id-1 div.sk-estimator {font-family: monospace;background-color: #f0f8ff;border: 1px dotted black;border-radius: 0.25em;box-sizing: border-box;margin-bottom: 0.5em;}#sk-container-id-1 div.sk-estimator:hover {background-color: #d4ebff;}#sk-container-id-1 div.sk-parallel-item::after {content: "";width: 100%;border-bottom: 1px solid gray;flex-grow: 1;}#sk-container-id-1 div.sk-label:hover label.sk-toggleable__label {background-color: #d4ebff;}#sk-container-id-1 div.sk-serial::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: 0;}#sk-container-id-1 div.sk-serial {display: flex;flex-direction: column;align-items: center;background-color: white;padding-right: 0.2em;padding-left: 0.2em;position: relative;}#sk-container-id-1 div.sk-item {position: relative;z-index: 1;}#sk-container-id-1 div.sk-parallel {display: flex;align-items: stretch;justify-content: center;background-color: white;position: relative;}#sk-container-id-1 div.sk-item::before, #sk-container-id-1 div.sk-parallel-item::before {content: "";position: absolute;border-left: 1px solid gray;box-sizing: border-box;top: 0;bottom: 0;left: 50%;z-index: -1;}#sk-container-id-1 div.sk-parallel-item {display: flex;flex-direction: column;z-index: 1;position: relative;background-color: white;}#sk-container-id-1 div.sk-parallel-item:first-child::after {align-self: flex-end;width: 50%;}#sk-container-id-1 div.sk-parallel-item:last-child::after {align-self: flex-start;width: 50%;}#sk-container-id-1 div.sk-parallel-item:only-child::after {width: 0;}#sk-container-id-1 div.sk-dashed-wrapped {border: 1px dashed gray;margin: 0 0.4em 0.5em 0.4em;box-sizing: border-box;padding-bottom: 0.4em;background-color: white;}#sk-container-id-1 div.sk-label label {font-family: monospace;font-weight: bold;display: inline-block;line-height: 1.2em;}#sk-container-id-1 div.sk-label-container {text-align: center;}#sk-container-id-1 div.sk-container {/* jupyter's `normalize.less` sets `[hidden] { display: none; }` but bootstrap.min.css set `[hidden] { display: none !important; }` so we also need the `!important` here to be able to override the default hidden behavior on the sphinx rendered scikit-learn.org. See: https://github.com/scikit-learn/scikit-learn/issues/21755 */display: inline-block !important;position: relative;}#sk-container-id-1 div.sk-text-repr-fallback {display: none;}</style><div id="sk-container-id-1" class="sk-top-container"><div class="sk-text-repr-fallback"><pre>DecisionTreeRegressor(max_leaf_nodes=4)</pre><b>In a Jupyter environment, please rerun this cell to show the HTML representation or trust the notebook. <br>On GitHub, the HTML representation is unable to render, please try loading this page with nbviewer.org.</b></div><div class="sk-container" hidden=""><div class="sk-item"><div class="sk-estimator sk-toggleable"><input class="sk-toggleable__control sk-hidden--visually" id="sk-estimator-id-1" type="checkbox" checked=""><label for="sk-estimator-id-1" class="sk-toggleable__label sk-toggleable__label-arrow">DecisionTreeRegressor</label><div class="sk-toggleable__content"><pre>DecisionTreeRegressor(max_leaf_nodes=4)</pre></div></div></div></div></div>
 </div>
 </div>
-<p>fastai’s <code>draw_tree</code> function displays what the tree learned:</p>
+<p><code>fastai</code>’s <code>draw_tree</code> function displays what the tree learned:</p>
 <div id="cell-fig-draw-tree" class="cell" data-execution_count="42">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -1871,7 +1871,7 @@ Figure&nbsp;1: Visualizing the decision criteria
 <p>The top node is the initial model before any splits have been made. The model has the data all in one group (samples = 1531020—the total size of the training set), and always predicts the target to be its average value over the whole dataset (254.05). The mean squared error between this value and the actual targets is 805354.01. The tree-building algorithm found the best split to be on <code>log_installed_capacity</code>, with the decision criteria (a Yes or No question) being whether <code>log_installed_capacity</code> is less than or equal to 9.41.</p>
 <p>The node moving down to the left shows that there are 1503570 rows where <code>log_installed_capacity</code> is less than or equal to 9.41. In this group, the average value of the target is 186.89. The best next split was found to be whether <code>log_installed_capacity</code> is less than or equal to 8.59.</p>
 <p>If we instead moved down to the right, we have rows where <code>log_installed_capacity</code> is greater than 9.41. The best next split from here is on <code>is_consumption</code>.</p>
-<p>The nodes on the bottom row are the leaf nodes; no further questions are asked. We can see that with each split, the model successfully separates larger targets from smaller targets, and that resulting groups’ average values differ significantly.</p>
+<p>The nodes on the bottom row are the leaf nodes; no further questions are asked. We can see that with each split, the model successfully separates larger targets from smaller targets, and that the resulting groups’ average values differ significantly.</p>
 <p>With Terrence Parr’s <a href="https://explained.ai/decision-tree-viz/">dtreeviz</a> library, we can gain further insight from the same model:</p>
 <div id="cell-fig-dtreeviz" class="cell" data-execution_count="43">
 <details open="" class="code-fold">
@@ -2126,7 +2126,7 @@ valid mae:  57.444592
 OOB error:  21.931264</code></pre>
 </div>
 </div>
-<p>Our random forest is also overfitting, but the validation error improved a fair bit compared to the decision tree’s 82.516.</p>
+<p>Our random forest is also overfitting, but the validation error improved a fair bit compared to the decision tree’s 82.5.</p>
 <p>A random forest is a ensemble of decision trees constructed by bagging: several decision trees are trained on a random subset of rows and columns. We trained 40 trees each on random choices of half the rows and half the columns. The randomness is meant to make the trees independent from one another so that their errors are also independent. Some trees overstimate the target while others underestimate it. Berkeley professor Leo Breiman, the inventor of bagging, had the insight that such independent predictors’ average error will tend to 0.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -2142,7 +2142,7 @@ Note
 </div>
 </div>
 <p>The out-of-bag (OOB) error is the average error across all trees on rows that each individual tree wasn’t trained on, as if these rows were the tree’s own validation set. Since the OOB error is significantly lower than the ensemble’s validation error, the individual trees are not overfitting their training subsets badly enough to drive the ensemble’s error. Something is affecting the ensemble’s performance, in addition to normal overfitting. One factor is likely the domain shift inherent in time series forecasting: training data is older than validation data and may exhibit patterns that aren’t valid anymore.</p>
-<p>Some prosumers may be especially tricky to model. To discover hard examples, we can assess a prediction’s relative confidence: its standard deviation across all trees. Let’s look at the relative confidence for the first 5 validation examples:</p>
+<p>Some prosumers may be especially tricky to model. To discover hard examples, we can assess a prediction’s relative confidence: its standard deviation across all trees. Let’s look at relative confidence for the first 5 validation examples:</p>
 <div id="efa17b70-5dd9-467d-878d-1e0da5fbf288" class="cell" data-execution_count="53">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -2230,7 +2230,7 @@ Note
 </div>
 </div>
 </div>
-<p>PID 0 seems to have much higher targets than PIDs 1 and 2. It’s consumption (2) is much higher than production (1) as well. We can get a broader sense of relative confidence from its quartiles:</p>
+<p>PID 0 seems to have much higher standard deviations (lower relative confidence) than PIDs 1 and 2. It’s predictions for consumption (2) are much less confident than for production (1) as well. We can get a broader sense of relative confidence from its quartiles:</p>
 <div id="69549620-4b77-4b8d-bce9-fd14688d4340" class="cell" data-execution_count="55">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -2772,9 +2772,14 @@ Figure&nbsp;4: Visualizing feature similarity
 </div>
 </div>
 </div>
-<p><code>fastai</code>’s <code>cluster_columns</code> function calculates the similarity (rank correlation) between features. In the figure above, the most similar features are merged early, far from the tree’s root on the left.</p>
-<p>The following appear closely related since they merged earliest: - <code>datetime</code>, <code>datetimeElapsed</code>, and <code>row_id</code> - <code>temperature_mean_fd</code> and <code>temperature_mean_hd</code> - <code>cos(datetimeDayofyear)</code> and <code>sin(datetimeDayofyear)</code></p>
-<p>Let’s see what we else can remove without losing accuracy. We’ll quickly train a small random forest and use its OOB score attribute to measure accuracy. OOB score is R^2, with 1.0 for a perfect model and 0.0 for a random model.</p>
+<p><code>fastai</code>’s <code>cluster_columns</code> function calculates the similarity (rank correlation) between features. In <a href="#fig-cluster-cols" class="quarto-xref">Figure&nbsp;4</a>, the most similar features are merged early, far from the tree’s root on the left.</p>
+<p>The following appear closely related since they merged earliest:</p>
+<ul>
+<li><code>datetime</code>, <code>datetimeElapsed</code>, and <code>row_id</code></li>
+<li><code>temperature_mean_fd</code> and <code>temperature_mean_hd</code></li>
+<li><code>cos(datetimeDayofyear)</code> and <code>sin(datetimeDayofyear)</code></li>
+</ul>
+<p>Let’s see what we else can remove without losing accuracy. We’ll quickly train a small random forest and use its OOB score attribute to measure accuracy. OOB score is R-squared, with 1.0 for a perfect model and 0.0 for a random model.</p>
 <div id="20427c67-ff7b-49f1-b156-53ecc40497f6" class="cell" data-execution_count="99">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -2875,7 +2880,7 @@ OOB error:  22.560125</code></pre>
 <pre><code>(135, 27)</code></pre>
 </div>
 </div>
-<p>By focusing on the strongest predictors and removing redundancy, we can use just 27 features while substantially improving performance. Simpifying the model this way makes it more resilient and easier to understand.</p>
+<p>By focusing on the strongest predictors and removing redundancy, we can use just 27 features while substantially improving performance. Simpifying the model this way makes it easier to understand and maintain.</p>
 </section>
 <section id="partial-dependence-analysis" class="level2" data-number="6">
 <h2 data-number="6" class="anchored" data-anchor-id="partial-dependence-analysis"><span class="header-section-number">6</span> Partial dependence analysis</h2>
@@ -2931,7 +2936,7 @@ Figure&nbsp;5: Partial dependence plots of the 2 strongest predictors
 </div>
 </div>
 </div>
-<p>Shown above are partial dependence plots. These show how a particular feature varies with the target all else being equal. This isn’t as straightforward as averaging the targets for each unique value. Instead, we copy the dataset and fix the values in <code>log_installed_capacity</code> to one of its represented values. We get the predictions on this made-up version and average them. This is repeated until we cover all values <code>log_installed_capacity</code> has taken in dataset. The plot above shows the average prediction vs <code>log_installed_capacity</code>’s such fixed values.</p>
+<p>The plots in <a href="#fig-partial-dependence" class="quarto-xref">Figure&nbsp;5</a> show how <code>log_installed_capacity</code> and <code>is_consumption</code> vary with the target all else being equal. This isn’t as straightforward as averaging the targets for each unique value. Instead, we copy the dataset and fix the values in <code>log_installed_capacity</code> to one of its represented values. We get the predictions on this made-up version and average them. This is repeated until we cover all values <code>log_installed_capacity</code> has taken in dataset. The plot above shows the average prediction vs <code>log_installed_capacity</code>’s such fixed values.</p>
 <p>As we might expect, greater installed capacity correlates to higher production or consumption amounts. Between 5.5 and 8 (the bulk of the data), the target appears linearly related with <code>log_installed_capacity</code>, which means it’s exponentially related with the raw <code>installed_capacity</code>. There’s a dramatic jump after 8, likely from those infrequent but large values seen in our earlier analysis.</p>
 <p>The <code>is_consumption</code> plot suggests that consumption amounts are significantly higher than production amounts, which matches what we saw with <code>dtreeviz</code>.</p>
 <div class="callout callout-style-default callout-important callout-titled">
@@ -3038,7 +3043,7 @@ Wall time: 6.91 µs</code></pre>
 </div>
 </div>
 <p>As expected, features that directly encode the date or measure weather conditions exhibit domain shift. <code>datetimeElapsed</code> shifts the most since it is incremented most frequently. <code>datetimeDayofyear</code> and <code>datetimeWeek</code> increment less frequently and within a narrower range of values, so it makes sense why they shift less.</p>
-<p>Let’s see if removing them helps, one at a time:</p>
+<p>Let’s see whether removing columns with high domain shift (i.e.&nbsp;an importance score &gt; 0.01) helps. We’ll remove the columns one at a time and check the validation error:</p>
 <div id="00922f83-6122-4eef-b7c5-6ad7a0ec5493" class="cell" data-execution_count="123">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -3082,7 +3087,8 @@ CPU times: user 7min 2s, sys: 1.87 s, total: 7min 3s
 Wall time: 1min 23s</code></pre>
 </div>
 </div>
-<p>Looking good. Lastly, it may help to not use old data. Let’s see whether dropping data prior to Jan 2022 helps:</p>
+<p>Looking good. Removing columns with high domain shift will make the model more resilient.</p>
+<p>Lastly, it may help to not use old data. Let’s see whether dropping data prior to Jan 2022 helps:</p>
 <div id="c4d85c3a-c1de-4302-84b0-7676b847b7c5" class="cell" data-execution_count="126">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -3187,7 +3193,7 @@ Note
 <pre><code>4.773013220192524</code></pre>
 </div>
 </div>
-<p>The prediction is obtained by adding the bias and the contributions’ sum. The bias is the dependent variable’s mean, i.e.&nbsp;the “model” at the every tree’s root node. The contributions’ sum indicates the total change in the prediction, which we can visualize with a waterfall chart:</p>
+<p>The prediction is obtained by adding the bias and the contributions’ sum. The bias is the dependent variable’s mean, i.e.&nbsp;the “model” at every tree’s root node. The contributions’ sum indicates the total change in the prediction, which we can visualize with a waterfall chart:</p>
 <div id="cell-fig-tree-interp" class="cell" data-execution_count="150">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -3243,7 +3249,7 @@ Figure&nbsp;6: Plotting feature contributions for a single example
 </div>
 </div>
 </div>
-<p>This row is a production target. We can see how each column influenced it’s prediction, with the overall change shown in net. The contribution of less influential columns are grouped together in “other”.</p>
+<p>This row shows a production target for a non-business prosumer in Harjumaa. We can see how each feature influenced the prediction–starting from 0–with the overall change shown in net. The contributions of less influential columns are grouped together in “other”.</p>
 <p>We haven’t yet considered random forests’ major limitation: their inability to extrapolate. A random forest consists of decision trees whose predictions are just the targets’ average value in a leaf node. Therefore, the trees (and hence the forest) can’t predict values outside the training data’s range! We may be able to alleviate the issue with a neural network.</p>
 </section>
 <section id="modeling-with-a-neural-network" class="level2" data-number="9">
@@ -3286,7 +3292,7 @@ Important
 <p>Recall that we dropped a random set of prosumers among those common to both training and validation after the split, making the validation ones new from the model’s point of view. Re-setting the random seed ensures we drop the same set of prosumers as we did earlier.</p>
 </div>
 </div>
-<p>When a <code>TabularPandas</code> is set up, <code>fastai</code> has to decide which variables are continuous and which are categorical. The function <code>cont_cat_split</code> makes this decision based on a variable’s cardinality–how many unique values it takes–passed in its <code>max_card</code> parameter. If the cardinality exceeds <code>max_card</code> or the variable is a float type, it’s treated as continuous. If it’s cardinality is less than <code>max_card</code>, it’s categorical. Let’s check that it worked correctly:</p>
+<p>When a <code>TabularPandas</code> is set up, <code>fastai</code> has to decide which variables are continuous and which are categorical. The function <code>cont_cat_split</code> makes this decision based on a variable’s cardinality–how many unique values it takes–and a <code>max_card</code> parameter. If the cardinality exceeds <code>max_card</code> or the variable is a float type, it’s treated as continuous. If it’s cardinality is less than <code>max_card</code>, it’s categorical. Let’s check that it worked correctly:</p>
 <div id="37218611-3ef8-4227-afb0-43249c205ff8" class="cell" data-execution_count="153">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -3993,6 +3999,21 @@ dtype: int64</code></pre>
 <h2 data-number="11" class="anchored" data-anchor-id="entity-embeddings-in-a-random-forest"><span class="header-section-number">11</span> Entity embeddings in a random forest</h2>
 <p>We saw a tradeoff with neural networks: gains in extrapolation and potentially accuracy, but fiddly training.</p>
 <p>In the paper <a href="https://arxiv.org/abs/1604.06737">“Entity Embeddings of Categorical Variables”</a>, authors Guo and Berkman show how the embeddings of categorical variables can be used in a random forest. In this way, we gain much of a neural network’s performance improvement without actually using one at inference time! The process is simple: train a neural network with categorical embeddings, concatenate the learned embeddings with the continuous columns, and then train our random forest.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In entity embedding, categorical variables’ distinct values–the categories–are allotted their own set of initially random numbers (“latent factors”). An embedding is just a lookup table that maps the categories to their latent factors. So, to “embed” a category is to look up its latent factors.</p>
+<p>In the data, a categorical variables’ original values are replaced with where to find their latent factors in the embedding. As we’ve seen, this is how <code>TabularPandas</code> encoded <code>is_consumption</code>. It’s original values–0 and 1–were replaced with 1 and 2, respectively. In the embedding, the latent factors for 0 and 1 are found at positions 1 and 2, respectively. This is why 1 and 2 have no particular meaning outside of this lookup operation.</p>
+<p>In a neural network, an embedding is just another layer. The latent factors within it are gradually adjusted during training and eventually approach values that capture meaningful aspects of the categories. The neural network only has to be trained once; we can store the embeddings and re-use them in other models.</p>
+</div>
+</div>
 <p><code>tabular_learner</code> already uses entity embedding to handle categorical variables, so we can just get its learned embeddings. The <code>embed_features</code> function below prepares the data:</p>
 <div id="271abeac-ffe4-473a-93fc-2de3ed4c475b" class="cell" data-execution_count="207">
 <details open="" class="code-fold">
@@ -4228,7 +4249,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
     var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
     var mailtoRegex = new RegExp(/^mailto:/);
-      var filterRegex = new RegExp("https:\/\/sksant\.github\.io\/");
+      var filterRegex = new RegExp('/' + window.location.host + '/');
     var isInternal = (href) => {
         return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
     }
