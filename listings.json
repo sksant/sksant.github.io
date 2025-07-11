@@ -2,10 +2,10 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/enefit-part-1/enefit-1.html",
       "/posts/enefit-part-2/enefit-2.html",
       "/posts/enefit-part-3/enefit-3.html",
       "/posts/enefit-part-4/enefit-4.html",
-      "/posts/enefit-part-1/enefit-1.html",
       "/posts/welcome/index.html"
     ]
   }
