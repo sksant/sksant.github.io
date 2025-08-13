@@ -1516,7 +1516,7 @@ Wall time: 2min 35s</code></pre>
 </div>
 </div>
 <p>The forest has a slightly higher training error than validation error, which points to underfitting. But the OOB error exceeds the forests’ validation error, which indicates that the individual trees are overfitting their training subsets.</p>
-<p>This result may have a few drivers. One is inherent to how random forests are trained. Bagging has a regularization effect: training is made harder so that overfitting is less likely and generalization is better. Thus, the forests’ training error may not get as low as it can (i.e.&nbsp;underfitting). Second, this forest includes only 40 trees, so the OOB error may not be as stable as it could be. Using more trees or otherwise tuning the forests’ parameters may alleviate the discrepancy. For now, we’ll keep going with a neural network.</p>
+<p>This may be because this forest includes only 40 trees, so the OOB error may not be as stable as it could be. Using more trees or otherwise tuning the forests’ parameters may alleviate the discrepancy. For now, we’ll keep going with a neural network.</p>
 </section>
 <section id="modeling-with-a-neural-network" class="level2" data-number="5">
 <h2 data-number="5" class="anchored" data-anchor-id="modeling-with-a-neural-network"><span class="header-section-number">5</span> Modeling with a neural network</h2>
@@ -2297,7 +2297,7 @@ pids_dropped from train: [14, 60, 20, 23]</code></pre>
 <pre><code>nn valid mae:  tensor(11.5992)</code></pre>
 </div>
 </div>
-<p>We again see a higher training error than validation error, but may be similarly attributable to regularization effects. <code>fastai</code>’s <code>tabular_learner</code> uses Dropout, weight decay, and batch normalization by default. It’s also possible that the validation set used during our development process is simply easier than the training set. In part 4, we will perform cross-validation, where we’ll train and evaluate on 3 different data splits, which will give us a better idea of our performance.</p>
+<p>We again see a higher training error than validation error. This may be attributable to regularization, where training is made harder so overfitting is less likely. <code>fastai</code>’s <code>tabular_learner</code> uses Dropout, weight decay, and batch normalization by default. It’s also possible that the validation set used during our development process is simply easier than the training set. In part 4, we will perform cross-validation, where we’ll train and evaluate on 3 different data splits, which will give us a better idea of our performance.</p>
 <p>Let’s see whether ensembling can take us further.</p>
 </section>
 <section id="ensembling" class="level2" data-number="6">
