@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Sameer Sant">
-<meta name="dcterms.date" content="2025-07-11">
+<meta name="dcterms.date" content="2026-02-26">
 
 <title>Sameer Sant - Enefit - Predict Energy Behavior of Prosumers, part 1</title>
 <style>
@@ -167,7 +167,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">July 11, 2025</p>
+        <p class="date">February 26, 2026</p>
       </div>
     </div>
     
@@ -1014,6 +1014,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><p><strong>date</strong>: mean and standard deviation over <em>all</em> counties (and hence all weather stations in each county) at each unique datetime</p></li>
 <li><p><strong>local</strong>: mean and standard deviation over all weather stations in an <em>individual county</em> at each unique datetime, i.e.&nbsp;mean/std of county <em>n</em> at datetime <em>d</em>.</p></li>
 </ol>
+<p>The local groupby profiles the weather for each county while the date groupby places local weather within broader national patterns. The standard deviation captures volatility at county and national levels.</p>
 <p>Now that we know how we’ll merge the tables, let’s look at the training set and clean the data.</p>
 </section>
 <section id="cleaning-the-data" class="level2" data-number="4">
@@ -1486,7 +1487,7 @@ Note
 <span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>features_df <span class="op">=</span> add_gas_prices_features(features_df, gas_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>At this stage, the only feature engineering we’ll do is enriching the representation of dates with metadata like DayofWeek/DayofMonth, is_month_start/end, is_weekend, is_holiday, etc; and capturing periodicity to distinguish hours of the same day or months of the same year.</p>
+<p>At this stage, the only feature engineering we’ll do is augment the dates with metadata like DayofWeek/DayofMonth, is_month_start/end, is_weekend, is_holiday, etc; and encode periodicity to distinguish hours of the same day or months of the same year. With this enriched representation of dates, we can surface seasonality in prosumers’ behavior at daily, weekly, and monthly timescales.</p>
 <div id="43695792-26f0-4328-9c57-697fc3ade430" class="cell" data-execution_count="32">
 <details class="code-fold">
 <summary>Show code</summary>
@@ -1911,7 +1912,7 @@ Note
 <p><code>TabularPandas</code> encodes categorical variables by replacing each unique level with a number. The numbers for each level are chosen consecutively based on the level’s order of appearance, but they have no particular meaning.</p>
 </div>
 </div>
-<p><a href="#fig-dtreeviz" class="quarto-xref">Figure&nbsp;2</a> shows the target distribution at each split point. The targets splitting on <code>is_consumption</code> have quite different distributions, which is in turn reflected in the leaf nodes: the average production (1) is 492.46, and the average consumption (2) is 7373.03. Perhaps it’s worth investigating the groups more closely in a later iteration, even modeling them separately.</p>
+<p><a href="#fig-dtreeviz" class="quarto-xref">Figure&nbsp;2</a> shows the target distribution at each split point. The targets splitting on <code>is_consumption</code> have quite different distributions, which is in turn reflected in the leaf nodes: the average production (1) is 492.46, and the average consumption (2) is 7373.03. Perhaps it’s worth investigating the groups more closely, even modeling them separately.</p>
 <p>In <code>is_consumption</code>, 0 (production) appears first and 1 (consumption) appears second, as seen before the <code>TabularPandas</code> was created:</p>
 <div id="8bb7b539-7068-428c-bd58-b66b37fa23d6" class="cell" data-execution_count="84">
 <details open="" class="code-fold">
@@ -2044,7 +2045,8 @@ Note
 </div>
 </div>
 </div>
-<p>We need to evaluate the models as we go on. The competition is scored on mean absolute error (MAE), so we’ll create functions to calculate it:</p>
+<p>We need to evaluate the models as we go on. The competition is scored on mean absolute error (MAE), which measures how well we model the typical case in spite of outliers. Unlike mean squared error, MAE does not penalize large mistakes enough to dominate the overall error. Because energy data often features outliers, say, due to the weather or outages, MAE is a natural choice.</p>
+<p>We’ll create functions to calculate it:</p>
 <div id="b309a692-5ebd-4a2d-8257-236d23cc4b43" class="cell" data-execution_count="46">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
@@ -2936,8 +2938,9 @@ Figure&nbsp;5: Partial dependence plots of the 2 strongest predictors
 </div>
 </div>
 </div>
-<p>The plots in <a href="#fig-partial-dependence" class="quarto-xref">Figure&nbsp;5</a> show how <code>log_installed_capacity</code> and <code>is_consumption</code> vary with the target all else being equal. This isn’t as straightforward as averaging the targets for each unique value. Instead, we copy the dataset and fix the values in <code>log_installed_capacity</code> to one of its represented values. We get the predictions on this made-up version and average them. This is repeated until we cover all values <code>log_installed_capacity</code> has taken in dataset. The plot above shows the average prediction vs <code>log_installed_capacity</code>’s such fixed values.</p>
-<p>As we might expect, greater installed capacity correlates to higher production or consumption amounts. Between 5.5 and 8 (the bulk of the data), the target appears linearly related with <code>log_installed_capacity</code>, which means it’s exponentially related with the raw <code>installed_capacity</code>. There’s a dramatic jump after 8, likely from those infrequent but large values seen in our earlier analysis.</p>
+<p><a href="#fig-partial-dependence" class="quarto-xref">Figure&nbsp;5</a> are partial dependence plots. They show how <code>log_installed_capacity</code> and <code>is_consumption</code> vary with the predictions all else being equal. To see how these are made, let’s focus on <code>log_installed_capacity</code>. First we make copies of the dataset: one for each of <code>log_installed_capacity</code>’s unique values. Then in each copy, we fix <code>log_installed_capacity</code> to one such value and average the resulting predictions. With one average per unique value, we get the plot above.</p>
+<p>Copying the dataset like this creates multiple versions of each row that vary on nothing other than <code>log_installed_capacity</code>, effectively controlling for all other features.</p>
+<p>As we might expect, greater installed capacity correlates to higher production or consumption amounts. Between 5.5 and 8 (the bulk of the data), the target appears linearly related with <code>log_installed_capacity</code>, which means it’s exponentially related with the raw <code>installed_capacity</code>. We also observed that this feature included some infrequent but large values. The model appears to handle these differently, since the predictions jump sharply after 8.</p>
 <p>The <code>is_consumption</code> plot suggests that consumption amounts are significantly higher than production amounts, which matches what we saw with <code>dtreeviz</code>.</p>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -3380,7 +3383,7 @@ Important
 </details>
 </div>
 <p>We know the target will always greater than or equal to 0, but a neural network can produce negative outputs. We can configure our <code>tabular_learner</code>’s sigmoid function with <code>y_range</code> to constrain its output values between 0 and some maximum. This will help stabilize training without overly compromising extrapolation flexibility. For now, I set the maximum to 3x the maximum target in the training set.</p>
-<p>The default <code>tabular_learner</code> has 2 hidden layers, with 200 and 100 activations, respectively, which works well for small datasets. With some fiddling, I found increasing the layer sizes to 1000 and 500 activations to work reasonably well.</p>
+<p>The default <code>tabular_learner</code> (a multilayer perceptron) has 2 hidden layers, with 200 and 100 activations, respectively, which works well for small datasets. With some fiddling, I found increasing the layer sizes to 1000 and 500 activations to work reasonably well.</p>
 <p>To help set a learning rate, <code>fastai</code> provides a handy learning rate finder:</p>
 <div id="8df5554d-1107-4d56-a889-ff26c46ae8df" class="cell" data-execution_count="199">
 <details open="" class="code-fold">
