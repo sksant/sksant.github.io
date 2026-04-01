@@ -186,7 +186,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#intro" id="toc-intro" class="nav-link active" data-scroll-target="#intro"><span class="header-section-number">1</span> Intro</a></li>
   <li><a href="#analysis" id="toc-analysis" class="nav-link" data-scroll-target="#analysis"><span class="header-section-number">2</span> Analysis</a></li>
   <li><a href="#next-steps" id="toc-next-steps" class="nav-link" data-scroll-target="#next-steps"><span class="header-section-number">3</span> Next steps</a></li>
-  <li><a href="#cross-validation-log" id="toc-cross-validation-log" class="nav-link" data-scroll-target="#cross-validation-log"><span class="header-section-number">4</span> Cross validation log</a></li>
+  <li><a href="#appendix" id="toc-appendix" class="nav-link" data-scroll-target="#appendix"><span class="header-section-number">4</span> Appendix</a></li>
   </ul>
 </nav>
     </div>
@@ -578,7 +578,7 @@ Wall time: 16min 23s</code></pre>
 </details>
 </div>
 <p>Each cross validation round, we fit production and consumption models and score them on their corresponding data, i.e.&nbsp;production models on production data, consumption models on consumption data. Finally, the two sets of ensembles are evaluated against the test set.</p>
-<p>The cross validation results are summarized in the tables below. For details, see the <a href="https://sksant.github.io/posts/enefit-part-4/enefit-4.html#cross-validation-log">cross validation log</a></p>
+<p>The cross validation results are summarized in the tables below. For details, see the <a href="https://sksant.github.io/posts/enefit-part-4/enefit-4.html#appendix">appendix</a>.</p>
 <p><img src="enefit-4_files/figure-html/6483836f-1-image-3.png" class="img-fluid" alt="image-3.png"> <img src="enefit-4_files/figure-html/6483836f-2-image-4.png" class="img-fluid" alt="image-4.png"></p>
 </section>
 <section id="analysis" class="level2" data-number="2">
@@ -598,14 +598,14 @@ Wall time: 16min 23s</code></pre>
 <p>This post concludes my series on this competition.</p>
 <p>To go further, I would continue to experiment with:</p>
 <ul>
-<li>new features: ratios between the lags, features that capture complex trends/seasonality/cycles with more granularity</li>
+<li>new features: ratios between the lags, features that better capture complex trends/seasonality/cycles</li>
 <li>new models: gradient-boosted decision trees (like LightGBM)</li>
 <li>hyperparameter optimization</li>
 </ul>
 <p>Thanks for reading!</p>
 </section>
-<section id="cross-validation-log" class="level2" data-number="4">
-<h2 data-number="4" class="anchored" data-anchor-id="cross-validation-log"><span class="header-section-number">4</span> Cross validation log</h2>
+<section id="appendix" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="appendix"><span class="header-section-number">4</span> Appendix</h2>
 <div id="aed29d12-ec4c-450e-9189-17c0b57d70d2" class="cell">
 <details open="" class="code-fold">
 <summary>Hide code</summary>
